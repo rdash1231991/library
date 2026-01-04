@@ -25,6 +25,17 @@ flutter pub get
 flutter run
 ```
 
+## Run everything with Docker (local web URL)
+
+From the repo root:
+
+```bash
+docker compose up --build
+```
+
+- Backend: `http://localhost:8000`
+- Web app: `http://localhost:8080`
+
 ## Base URL (important)
 
 - Android emulator: `http://10.0.2.2:8000`

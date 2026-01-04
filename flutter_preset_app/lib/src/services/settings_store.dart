@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsStore {
@@ -7,8 +8,14 @@ class SettingsStore {
 
   final SharedPreferences _prefs;
 
-  String get baseUrl =>
-      _prefs.getString(_kBaseUrlKey) ?? 'http://10.0.2.2:8000';
+  String get baseUrl => _prefs.getString(_kBaseUrlKey) ?? _defaultBaseUrl();
+
+  static String _defaultBaseUrl() {
+    // Web typically runs on the same machine as the backend during local dev.
+    if (kIsWeb) return 'http://localhost:8000';
+    // Android emulator default.
+    return 'http://10.0.2.2:8000';
+  }
 
   Future<void> setBaseUrl(String value) async {
     await _prefs.setString(_kBaseUrlKey, value);
