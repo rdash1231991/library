@@ -29,6 +29,7 @@ flutter run
 
 - Android emulator: `http://10.0.2.2:8000`
 - iOS simulator: `http://localhost:8000`
+- Chrome/web (same computer): `http://localhost:8000`
 - Real device: `http://<your-laptop-LAN-IP>:8000`
 
 You can change this in the app under **Settings**.

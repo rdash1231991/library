@@ -7,12 +7,23 @@ from typing import Any
 import cv2
 import numpy as np
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from PIL import Image
 
 from preset_service.preset import PresetV1, apply_preset_to_bgr, create_preset_from_bgr
 
 app = FastAPI(title="Photo Preset Service", version="0.1.0")
+
+# For Flutter Web (and local dev UIs), we need CORS enabled.
+# This is permissive by design for MVP/local testing.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def _load_image_to_bgr_u8(file_bytes: bytes) -> np.ndarray:
