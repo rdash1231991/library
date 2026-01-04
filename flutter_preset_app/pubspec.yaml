@@ -1,0 +1,26 @@
+name: flutter_preset_app
+description: Create photo presets from a reference image and re-apply them to other photos.
+publish_to: "none"
+
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  http: ^1.2.2
+  image_picker: ^1.1.2
+  shared_preferences: ^2.3.3
+  path_provider: ^2.1.5
+  share_plus: ^10.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
