@@ -71,6 +71,19 @@ async def apply_preset(
     file_bytes = await image.read()
     bgr = _load_image_to_bgr_u8(file_bytes)
     out_bgr = apply_preset_to_bgr(bgr, preset)
+
+    # Calculate accuracy metrics
+    out_preset = create_preset_from_bgr(out_bgr)
+    metrics = preset.compute_accuracy(out_preset)
+
     out_png = _encode_bgr_u8_to_png(out_bgr)
-    return Response(content=out_png, media_type="image/png")
+
+    # Add metrics to headers. We must cast to str.
+    headers = {
+        "X-Accuracy-Score": f"{metrics['total_score']:.4f}",
+        "X-Tone-Accuracy": f"{metrics['tone_accuracy']:.4f}",
+        "X-Color-Accuracy": f"{metrics['color_accuracy']:.4f}",
+    }
+
+    return Response(content=out_png, media_type="image/png", headers=headers)
 

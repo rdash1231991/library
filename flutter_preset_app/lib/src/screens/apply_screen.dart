@@ -23,6 +23,7 @@ class _ApplyScreenState extends State<ApplyScreen> {
   Preset? _selectedPreset;
   PickedImage? _picked;
   Uint8List? _outputPng;
+  Map<String, String>? _accuracyStats;
   bool _busy = false;
 
   @override
@@ -46,6 +47,7 @@ class _ApplyScreenState extends State<ApplyScreen> {
     setState(() {
       _picked = p;
       _outputPng = null;
+      _accuracyStats = null;
     });
   }
 
@@ -57,12 +59,15 @@ class _ApplyScreenState extends State<ApplyScreen> {
     setState(() => _busy = true);
     try {
       final api = ApiClient(baseUrl: widget.settings.baseUrl);
-      final out = await api.applyPreset(
+      final result = await api.applyPreset(
         imageBytes: Uint8List.fromList(picked.bytes),
         filename: picked.filename,
         presetJson: preset.presetJson,
       );
-      setState(() => _outputPng = out);
+      setState(() {
+        _outputPng = result.imageBytes;
+        _accuracyStats = result.headers;
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -150,6 +155,16 @@ class _ApplyScreenState extends State<ApplyScreen> {
                             ),
                           ),
                         ),
+                        if (_accuracyStats != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            'Match Score: ${(_accuracyStats!['x-accuracy-score'] ?? 'N/A')}\n'
+                            'Tone: ${(_accuracyStats!['x-tone-accuracy'] ?? 'N/A')} | '
+                            'Color: ${(_accuracyStats!['x-color-accuracy'] ?? 'N/A')}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         FilledButton.icon(
                           onPressed: _downloadOrShare,
