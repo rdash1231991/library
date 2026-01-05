@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import io
 import json
+import os
 from typing import Any
 
 import cv2
 import numpy as np
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, Response
 from PIL import Image
 
@@ -71,6 +73,26 @@ async def apply_preset(
     file_bytes = await image.read()
     bgr = _load_image_to_bgr_u8(file_bytes)
     out_bgr = apply_preset_to_bgr(bgr, preset)
+
+    # Calculate accuracy metrics
+    out_preset = create_preset_from_bgr(out_bgr)
+    metrics = preset.compute_accuracy(out_preset)
+
     out_png = _encode_bgr_u8_to_png(out_bgr)
-    return Response(content=out_png, media_type="image/png")
+
+    # Add metrics to headers. We must cast to str.
+    headers = {
+        "X-Accuracy-Score": f"{metrics['total_score']:.4f}",
+        "X-Tone-Accuracy": f"{metrics['tone_accuracy']:.4f}",
+        "X-Color-Accuracy": f"{metrics['color_accuracy']:.4f}",
+    }
+
+    return Response(content=out_png, media_type="image/png", headers=headers)
+
+
+# Mount static files if they exist (for production deployment).
+# This must be at the end to avoid overshadowing API routes.
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(static_dir):
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 

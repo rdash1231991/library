@@ -34,7 +34,7 @@ class ApiClient {
     return decoded;
   }
 
-  Future<Uint8List> applyPreset({
+  Future<ApplyResult> applyPreset({
     required Uint8List imageBytes,
     required String filename,
     required Map<String, dynamic> presetJson,
@@ -50,8 +50,15 @@ class ApiClient {
       final body = utf8.decode(outBytes, allowMalformed: true);
       throw ApiException(resp.statusCode, body);
     }
-    return outBytes;
+    return ApplyResult(outBytes, resp.headers);
   }
+}
+
+class ApplyResult {
+  final Uint8List imageBytes;
+  final Map<String, String> headers;
+
+  ApplyResult(this.imageBytes, this.headers);
 }
 
 class ApiException implements Exception {

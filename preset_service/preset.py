@@ -48,6 +48,44 @@ class PresetV1:
             "target_l_cdf": self.target_l_cdf,
         }
 
+    def compute_accuracy(self, other: "PresetV1") -> dict[str, float]:
+        """
+        Compare this preset (target) with another (actual output stats)
+        and return accuracy metrics.
+        """
+        # 1. L-channel CDF match (Wasserstein-like or simple Mean Absolute Error)
+        # cdf is strictly increasing 0..1, so MAE is a reasonable proxy for distance.
+        cdf1 = np.array(self.target_l_cdf)
+        cdf2 = np.array(other.target_l_cdf)
+        # Average absolute difference
+        cdf_diff = np.mean(np.abs(cdf1 - cdf2))
+        l_accuracy = max(0.0, 1.0 - cdf_diff * 10.0) # Scale up diff so small diffs matter
+
+        # 2. Color stats match (mean/std for a,b)
+        # We only care about indices 1 (a) and 2 (b)
+        mean_diff = 0.0
+        std_diff = 0.0
+        for i in [1, 2]:
+            mean_diff += abs(self.target_mean[i] - other.target_mean[i])
+            std_diff += abs(self.target_std[i] - other.target_std[i])
+        
+        # Normalize relative to 255 range approximately
+        # Max diff could be 255. 
+        # Let's say 10 units of difference is "bad".
+        color_accuracy = max(0.0, 1.0 - (mean_diff + std_diff) / 40.0)
+
+        # Combined score
+        total_score = (l_accuracy + color_accuracy) / 2.0
+        
+        return {
+            "total_score": total_score,
+            "tone_accuracy": l_accuracy,
+            "color_accuracy": color_accuracy,
+            "cdf_mae": float(cdf_diff),
+            "mean_mae": float(mean_diff),
+            "std_mae": float(std_diff),
+        }
+
 
 def _bgr_to_lab_u8(bgr_u8: np.ndarray) -> np.ndarray:
     if bgr_u8.dtype != np.uint8 or bgr_u8.ndim != 3 or bgr_u8.shape[2] != 3:
