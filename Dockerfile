@@ -15,6 +15,10 @@ RUN useradd -m -u 10001 flutteruser
 USER flutteruser
 WORKDIR /home/flutteruser/app
 
+# Cirrus' Flutter SDK lives in /sdks/flutter (owned by root). When running as a
+# non-root user, git may block access unless it's marked safe.
+RUN git config --global --add safe.directory /sdks/flutter
+
 # Copy pubspec first for better layer caching.
 COPY --chown=flutteruser:flutteruser pubspec.yaml pubspec.lock ./
 RUN flutter pub get
