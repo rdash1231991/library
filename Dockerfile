@@ -19,8 +19,9 @@ RUN flutter pub get
 # Copy the rest of the source.
 COPY . .
 
-# Build web release (canvaskit is heavier; html renderer is lighter).
-RUN flutter build web --release --web-renderer html
+# Build web release.
+# Note: Newer Flutter versions removed the `--web-renderer` flag.
+RUN flutter build web --release
 
 
 FROM nginx:1.27-alpine AS runtime
