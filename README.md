@@ -100,6 +100,8 @@ Docker is best suited for deploying the **Flutter web build** (mobile builds are
 
 Note: For the Docker/web deployment we use Drift’s **WASM sqlite (in-memory)** database so the app runs in any browser without `dart:ffi`. That means data won’t persist across page reloads in the Docker/web build.
 
+Also, the `sqlite3.wasm` file served in Docker must match the Dart `sqlite3` package version (this repo pins `sqlite3: 2.9.4` and Docker downloads `sqlite3-2.9.4/sqlite3.wasm`).
+
 ### Run with docker-compose
 
 ```bash

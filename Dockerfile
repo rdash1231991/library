@@ -25,7 +25,7 @@ COPY . .
 
 # Drift (web wasm) runtime dependency (used by in-memory sqlite on web).
 RUN mkdir -p web && \
-    curl -L "https://github.com/simolus3/sqlite3.dart/releases/latest/download/sqlite3.wasm" -o web/sqlite3.wasm
+    curl -L "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-2.9.4/sqlite3.wasm" -o web/sqlite3.wasm
 
 # Build web release.
 # Note: Newer Flutter versions removed the `--web-renderer` flag.
