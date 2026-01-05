@@ -98,6 +98,8 @@ flutter test
 
 Docker is best suited for deploying the **Flutter web build** (mobile builds aren’t “run” in Docker).
 
+Note: For the Docker/web deployment we use Drift’s **WASM sqlite (in-memory)** database so the app runs in any browser without `dart:ffi`. That means data won’t persist across page reloads in the Docker/web build.
+
 ### Run with docker-compose
 
 ```bash

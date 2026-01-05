@@ -1,20 +1,12 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
+import 'database_connection.dart';
 import 'tables/app_tables.dart';
 
 part 'app_database.g.dart';
 
 LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dir.path, 'habit_challenge_tracker.sqlite'));
-    return NativeDatabase.createInBackground(file);
-  });
+  return LazyDatabase(() => openQueryExecutor());
 }
 
 @DriftDatabase(
