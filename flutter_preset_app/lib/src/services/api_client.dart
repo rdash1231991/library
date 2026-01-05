@@ -38,12 +38,16 @@ class ApiClient {
     required Uint8List imageBytes,
     required String filename,
     required Map<String, dynamic> presetJson,
+    double? strength,
   }) async {
     final req = http.MultipartRequest('POST', _u('/apply'));
     req.files.add(
       http.MultipartFile.fromBytes('image', imageBytes, filename: filename),
     );
     req.fields['preset_json'] = jsonEncode(presetJson);
+    if (strength != null) {
+      req.fields['strength'] = strength.toString();
+    }
     final resp = await req.send();
     final outBytes = await resp.stream.toBytes();
     if (resp.statusCode < 200 || resp.statusCode >= 300) {

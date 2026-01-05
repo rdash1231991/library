@@ -24,6 +24,7 @@ class _ApplyScreenState extends State<ApplyScreen> {
   PickedImage? _picked;
   Uint8List? _outputPng;
   bool _busy = false;
+  double _strength = 0.75;
 
   @override
   void initState() {
@@ -61,6 +62,7 @@ class _ApplyScreenState extends State<ApplyScreen> {
         imageBytes: Uint8List.fromList(picked.bytes),
         filename: picked.filename,
         presetJson: preset.presetJson,
+        strength: _strength,
       );
       setState(() => _outputPng = out);
     } catch (e) {
@@ -121,6 +123,25 @@ class _ApplyScreenState extends State<ApplyScreen> {
               onPressed: _busy ? null : _pickTarget,
               icon: const Icon(Icons.photo_library_outlined),
               label: Text(_picked == null ? 'Pick target photo' : 'Pick another photo'),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const SizedBox(
+                  width: 84,
+                  child: Text('Strength'),
+                ),
+                Expanded(
+                  child: Slider(
+                    value: _strength,
+                    min: 0,
+                    max: 1,
+                    divisions: 20,
+                    label: _strength.toStringAsFixed(2),
+                    onChanged: _busy ? null : (v) => setState(() => _strength = v),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             FilledButton(

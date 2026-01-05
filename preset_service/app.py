@@ -61,6 +61,7 @@ async def create_preset(image: UploadFile = File(...)) -> JSONResponse:
 async def apply_preset(
     image: UploadFile = File(...),
     preset_json: str = Form(...),
+    strength: float | None = Form(None),
 ) -> Response:
     try:
         preset_dict = json.loads(preset_json)
@@ -70,7 +71,7 @@ async def apply_preset(
 
     file_bytes = await image.read()
     bgr = _load_image_to_bgr_u8(file_bytes)
-    out_bgr = apply_preset_to_bgr(bgr, preset)
+    out_bgr = apply_preset_to_bgr(bgr, preset, strength_override=strength)
     out_png = _encode_bgr_u8_to_png(out_bgr)
     return Response(content=out_png, media_type="image/png")
 

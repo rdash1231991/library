@@ -24,6 +24,9 @@ class PresetV1:
     target_std: list[float]  # [L, a, b]
     # Target CDF for L channel histogram matching
     target_l_cdf: list[float]  # length 256, monotonically non-decreasing, last ~1.0
+    # Optional tuning knobs (kept in the preset so results are consistent)
+    # 0.0 = no effect, 1.0 = full effect
+    strength: float = 0.75
 
     @staticmethod
     def from_dict(d: dict[str, Any]) -> "PresetV1":
@@ -37,6 +40,7 @@ class PresetV1:
             target_mean=list(map(float, d["target_mean"])),
             target_std=list(map(float, d["target_std"])),
             target_l_cdf=list(map(float, d["target_l_cdf"])),
+            strength=float(d.get("strength", 0.75)),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -46,6 +50,7 @@ class PresetV1:
             "target_mean": self.target_mean,
             "target_std": self.target_std,
             "target_l_cdf": self.target_l_cdf,
+            "strength": self.strength,
         }
 
 
@@ -109,10 +114,19 @@ def create_preset_from_bgr(bgr_u8: np.ndarray) -> PresetV1:
         target_mean=mean,
         target_std=std,
         target_l_cdf=l_cdf.astype(np.float64).tolist(),
+        strength=0.75,
     )
 
 
-def apply_preset_to_bgr(bgr_u8: np.ndarray, preset: PresetV1) -> np.ndarray:
+def apply_preset_to_bgr(
+    bgr_u8: np.ndarray,
+    preset: PresetV1,
+    *,
+    strength_override: float | None = None,
+) -> np.ndarray:
+    strength = float(preset.strength if strength_override is None else strength_override)
+    strength = float(np.clip(strength, 0.0, 1.0))
+
     lab = _bgr_to_lab_u8(bgr_u8)
     l_u8, a_u8, b_u8 = cv2.split(lab)
 
@@ -122,6 +136,11 @@ def apply_preset_to_bgr(bgr_u8: np.ndarray, preset: PresetV1) -> np.ndarray:
     if tgt_cdf.shape != (256,):
         raise ValueError("preset.target_l_cdf must be length 256")
     l_map = _hist_match_map_u8(src_cdf, tgt_cdf)
+    # Blend tone mapping with identity to avoid harsh/unnatural shifts.
+    if strength < 1.0:
+        identity = np.arange(256, dtype=np.float32)
+        blended = np.round((1.0 - strength) * identity + strength * l_map.astype(np.float32))
+        l_map = np.clip(blended, 0, 255).astype(np.uint8)
     l_u8 = cv2.LUT(l_u8, l_map)
 
     # 2) Color match (a,b only): mean/std match to target.
@@ -133,8 +152,16 @@ def apply_preset_to_bgr(bgr_u8: np.ndarray, preset: PresetV1) -> np.ndarray:
     tgt_a_mean, tgt_b_mean = float(preset.target_mean[1]), float(preset.target_mean[2])
     tgt_a_std, tgt_b_std = float(preset.target_std[1]), float(preset.target_std[2])
 
-    a = (a - a_mean) * (tgt_a_std / a_std) + tgt_a_mean
-    b = (b - b_mean) * (tgt_b_std / b_std) + tgt_b_mean
+    # Clamp scale factors to avoid extreme saturation/color casts.
+    scale_a = float(np.clip(tgt_a_std / a_std, 0.6, 1.8))
+    scale_b = float(np.clip(tgt_b_std / b_std, 0.6, 1.8))
+
+    a_full = (a - a_mean) * scale_a + tgt_a_mean
+    b_full = (b - b_mean) * scale_b + tgt_b_mean
+
+    # Blend chroma adjustment too (strength might be < 1).
+    a = (1.0 - strength) * a + strength * a_full
+    b = (1.0 - strength) * b + strength * b_full
 
     a_u8 = np.clip(np.round(a), 0, 255).astype(np.uint8)
     b_u8 = np.clip(np.round(b), 0, 255).astype(np.uint8)
