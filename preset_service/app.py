@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import io
 import json
+import os
 from typing import Any
 
 import cv2
 import numpy as np
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, Response
 from PIL import Image
 
@@ -86,4 +88,11 @@ async def apply_preset(
     }
 
     return Response(content=out_png, media_type="image/png", headers=headers)
+
+
+# Mount static files if they exist (for production deployment).
+# This must be at the end to avoid overshadowing API routes.
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(static_dir):
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 

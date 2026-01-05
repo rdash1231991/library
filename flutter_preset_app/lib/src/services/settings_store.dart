@@ -11,6 +11,9 @@ class SettingsStore {
   String get baseUrl => _prefs.getString(_kBaseUrlKey) ?? _defaultBaseUrl();
 
   static String _defaultBaseUrl() {
+    // If running in release mode on web, assume served from same origin (relative path).
+    if (kIsWeb && kReleaseMode) return '';
+
     // Web typically runs on the same machine as the backend during local dev.
     if (kIsWeb) return 'http://localhost:8000';
     // Android emulator default.
