@@ -10,7 +10,8 @@ import 'package:sqlite3/wasm.dart';
 /// This keeps Docker deployment simple and avoids `dart:ffi` (not available on web).
 Future<QueryExecutor> openQueryExecutor() async {
   // This file must be available at runtime (served from `/sqlite3.wasm`).
-  final sqlite3 = await WasmSqlite3.loadFromUrl(Uri.parse('sqlite3.wasm'));
+  // Use an absolute URL so it works on deep routes (e.g. `/home`).
+  final sqlite3 = await WasmSqlite3.loadFromUrl(Uri.parse('/sqlite3.wasm'));
   sqlite3.registerVirtualFileSystem(InMemoryFileSystem(), makeDefault: true);
 
   return WasmDatabase.inMemory(sqlite3);
