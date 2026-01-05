@@ -1,15 +1,7 @@
 services:
-  api:
+  app:
     build:
-      context: ./preset_service
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
-
-  web:
-    build:
-      context: ./flutter_preset_app
-    ports:
-      - "8080:80"
-    depends_on:
-      - api
-
