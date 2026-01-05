@@ -94,6 +94,25 @@ Then on the empty Home state, tap **Seed demo data**.
 flutter test
 ```
 
+## Docker (easy deployment)
+
+Docker is best suited for deploying the **Flutter web build** (mobile builds aren’t “run” in Docker).
+
+### Run with docker-compose
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost:8080`.
+
+### Run with plain docker
+
+```bash
+docker build -t habit-challenge-tracker .
+docker run --rm -p 8080:80 habit-challenge-tracker
+```
+
 ## Notes
 
 - All data is stored locally in SQLite via Drift.

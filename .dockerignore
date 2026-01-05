@@ -1,0 +1,15 @@
+.dart_tool/
+.idea/
+.vscode/
+build/
+.flutter_sdk/
+.pub-cache/
+.git/
+ios/
+android/
+macos/
+windows/
+linux/
+coverage/
+*.iml
+**/*.log
