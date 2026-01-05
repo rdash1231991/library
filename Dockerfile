@@ -10,26 +10,18 @@
 
 FROM ghcr.io/cirruslabs/flutter:stable AS build
 
-# Create a non-root user for the build.
-RUN useradd -m -u 10001 flutteruser
+WORKDIR /app
 
-# Cirrus' Flutter SDK lives in /sdks/flutter (owned by root). Flutter writes to
-# /sdks/flutter/bin/cache during `flutter pub get` / builds, so we must make that
-# cache writable for the non-root user.
-RUN mkdir -p /sdks/flutter/bin/cache && chown -R flutteruser:flutteruser /sdks/flutter/bin/cache
-
-USER flutteruser
-WORKDIR /home/flutteruser/app
-
-# Git safety: mark Flutter SDK as safe for this user.
+# Cirrus' Flutter SDK is located at /sdks/flutter. Newer git versions may
+# consider it "dubious ownership" inside containers; mark it safe.
 RUN git config --global --add safe.directory /sdks/flutter
 
 # Copy pubspec first for better layer caching.
-COPY --chown=flutteruser:flutteruser pubspec.yaml pubspec.lock ./
+COPY pubspec.yaml pubspec.lock ./
 RUN flutter pub get
 
 # Copy the rest of the source.
-COPY --chown=flutteruser:flutteruser . .
+COPY . .
 
 # Drift (web wasm) runtime dependency (used by in-memory sqlite on web).
 RUN mkdir -p web && \
