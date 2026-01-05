@@ -10,13 +10,18 @@
 
 FROM ghcr.io/cirruslabs/flutter:stable AS build
 
-# Don't run flutter as root (recommended by Flutter tooling).
+# Create a non-root user for the build.
 RUN useradd -m -u 10001 flutteruser
+
+# Cirrus' Flutter SDK lives in /sdks/flutter (owned by root). Flutter writes to
+# /sdks/flutter/bin/cache during `flutter pub get` / builds, so we must make that
+# cache writable for the non-root user.
+RUN mkdir -p /sdks/flutter/bin/cache && chown -R flutteruser:flutteruser /sdks/flutter/bin/cache
+
 USER flutteruser
 WORKDIR /home/flutteruser/app
 
-# Cirrus' Flutter SDK lives in /sdks/flutter (owned by root). When running as a
-# non-root user, git may block access unless it's marked safe.
+# Git safety: mark Flutter SDK as safe for this user.
 RUN git config --global --add safe.directory /sdks/flutter
 
 # Copy pubspec first for better layer caching.
